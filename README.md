@@ -1,2 +1,5 @@
-# ech
-Erlang Clickhouse inserter (save batch inserting)
+ech
+=====
+
+Erlang clickhouse client
+
