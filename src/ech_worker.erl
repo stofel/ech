@@ -130,7 +130,6 @@ batch_insert(State = #{out := Batch, url := Url, channel := ChannelName}) ->
 
 %%
 make_request(ChannelName, ChannelPid, Url, Batch) ->
-  %io:format("BBBBB ~p~n", [Batch]),
   {Result, RequestContext} = try
     begin
       case prepare_json(Batch) of
@@ -155,7 +154,7 @@ make_request(ChannelName, ChannelPid, Url, Batch) ->
   case gen_server:call(ChannelPid, {batch_insert_result, Result}) of %% TODO спросить у сервера продолжать ли попытки
     {batch_done, _} -> batch_done;
     {repeat, Time}  -> timer:sleep(Time), make_request(ChannelName, ChannelPid, Url, Batch);
-    {batch_drop, {M,F,A}}     -> 
+    {batch_drop, {M,F,A}} -> 
       %% Try to safe batch
       DropMessage = #{name => ChannelName, pid => ChannelPid, batch => Batch, context => RequestContext},
       apply(M, F, [DropMessage|A]),
@@ -167,7 +166,7 @@ make_request(ChannelName, ChannelPid, Url, Batch) ->
 %%
 prepare_json(Batch) ->
   try 
-    JsonList = [jsx:encode(Map) || Map <- Batch],
+    JsonList = lists:reverse([jsx:encode(Map) || Map <- Batch]),
     {ok, << <<JsonPart/binary, " ">> || JsonPart <- JsonList >>}
   catch
     _E:_R:_D -> 
